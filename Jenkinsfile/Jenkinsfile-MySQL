@@ -1,0 +1,41 @@
+pipeline{
+    agent{
+         node{
+             label "Slave-1"
+             customWorkspace "/home/jenkins/demo"
+         }
+    }
+    environment{
+        JAVA_HOME="/usr/lib/jvm/java-17-amazon-corretto.x86_64"
+        PATH="$PATH:$JAVA_HOME/bin:/opt/apache-maven/bin:/opt/node-v16.0.0/bin:/usr/local/bin"
+    }
+    parameters { 
+        string(name: 'COMMIT_ID', defaultValue: '', description: 'Provide the Commit ID')
+    }
+    stages{
+        stage("clone-repo"){
+            steps{
+                cleanWs()
+                checkout scmGit(branches: [[name: '${COMMIT_ID}']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-cred', url: 'https://github.com/singhritesh85/Three-tier-WebApplication-Wildfly.git']])
+            }
+        }
+        stage("Create ConfiMap") {
+            steps{
+                sh '''    #!/bin/bash
+                          if [[ -z `/bin/bash -c "kubectl get cm -n mysql|grep db-scheme|cut -d ' ' -f1"` ]]
+                          then
+                             kubectl create configmap db-scheme --from-file=src/main/resources/db_backup.sql -n mysql
+                          fi
+                '''          
+            }
+        }
+        stage("MySQL-Deployment"){
+            steps{
+                //MySQL
+                sh 'argocd login argocd.singhritesh85.com --username admin --password Dexter@123 --skip-test-tls  --grpc-web'
+                sh 'argocd app create mysql --project default --repo https://github.com/singhritesh85/helm-repo-for-bitnami.git --path ./bitnami/mysql --dest-namespace mysql --dest-server https://kubernetes.default.svc --helm-set secondary.replicaCount=1 --helm-set primary.persistence.enabled=true --helm-set primary.persistence.size=1Gi --helm-set architecture=replication --helm-set secondary.persistence.enabled=true --helm-set secondary.persistence.size=1Gi --helm-set primary.service.type=ClusterIP --helm-set auth.rootPassword=Dexter@123 --helm-set auth.database=accounts --helm-set initdbScriptsConfigMap=db-scheme  --upsert'
+                sh 'argocd app sync mysql'
+            }
+        }
+    }    
+}
