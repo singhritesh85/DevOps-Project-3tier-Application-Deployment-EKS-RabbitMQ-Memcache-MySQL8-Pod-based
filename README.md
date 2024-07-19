@@ -1,5 +1,5 @@
 # DevOps-Project-3tier-Application-Deployment-EKS-RabbitMQ-Memcache-MySQL8-Pod-based
-![image](https://github.com/user-attachments/assets/c28e4aa6-5fc0-4669-b8c6-843262208a17)
+![image](https://github.com/user-attachments/assets/3e7df86f-bcbf-410c-89b3-4a0971b8daf3)
 
 In the Architecture diagram shown above a basic architecture of three-tier application is shown. In this diagram the first layer or tier is Presentation Layer or web tier. The second layer or tier is Application Layer or Business Tier and third layer or tier is Database Layer or Database tier. For web tier Nginx Service, for Application tier Tomcat and for Database tier MySQL and Memcache(for cache purpose) has been used as shown in the Architecture diagram above.
 
